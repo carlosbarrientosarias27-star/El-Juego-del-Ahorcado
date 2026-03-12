@@ -1,10 +1,35 @@
 from database import conectar_db, obtener_palabra_aleatoria 
 from visual import obtener_dibujo, mostrar_progreso 
 from logic import validar_letra, comprobar_victoria 
+import sqlite3 
+
+def agregar_palabra():
+    """
+    Solicita al usuario datos para insertar una nueva palabra en la base de datos.
+    """
+    palabra = input("Introduce la palabra: ").upper()
+    categoria = input("Introduce la categoría: ").upper()
+    dificultad = input("Introduce la dificultad (FACIL/INTERMEDIO/DIFICIL): ").upper()
+    
+    conn = conectar_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO palabras (palabra, categoria, dificultad) VALUES (?, ?, ?)", 
+                       (palabra, categoria, dificultad))
+        conn.commit()
+        print("¡Palabra añadida con éxito!")
+    except:
+        print("Error: La palabra ya existe o los datos son incorrectos.")
+    finally:
+        conn.close()
 
 def jugar():
-    """Bucle principal de la partida."""
-    # Selección de categoría (Commit 9)
+    """
+    Ejecuta el flujo principal de una partida del ahorcado.
+    
+    Gestiona la selección de categoría, el control de intentos, la validación 
+    de letras y la determinación del estado final (victoria o derrota).
+    """
     conn = conectar_db()
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT categoria FROM palabras")
@@ -28,14 +53,10 @@ def jugar():
 
     while errores < intentos_max:
         print(obtener_dibujo(errores))
-        
-        # Mostrar palabra oculta (Commit 3)
-        progreso = [letra if letra in letras_adivinadas else "_" for letra in palabra_objetivo]
-        print(f"Palabra: {' '.join(progreso)}")
+        print(mostrar_progreso(palabra_objetivo, letras_adivinadas))
         print(f"Letras usadas: {', '.join(letras_incorrectas)}")
         
-        # Victoria (Commit 6)
-        if "_" not in progreso:
+        if comprobar_victoria(palabra_objetivo, letras_adivinadas):
             print(f"\n¡VICTORIA! Has adivinado: {palabra_objetivo}")
             break
             
@@ -45,8 +66,6 @@ def jugar():
             print("Entrada no válida. Introduce solo una letra.")
             continue
             
-        letra = letra.upper()
-
         if letra in letras_adivinadas or letra in letras_incorrectas:
             print(f"Ya habías usado la letra '{letra}'.")
             continue
@@ -64,6 +83,9 @@ def jugar():
         print(f"\n¡DERROTA! La palabra era: {palabra_objetivo}") 
 
 def menu():
+    """
+    Muestra el menú principal y gestiona la navegación entre las opciones del juego.
+    """
     while True:
         print("\n=== JUEGO DEL AHORCADO CON SQLITE ===")
         print("1. Jugar")
@@ -91,4 +113,4 @@ def menu():
             print("Opción no válida.")
 
 if __name__ == "__main__":
-    menu()       
+    menu()    

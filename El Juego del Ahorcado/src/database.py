@@ -2,14 +2,21 @@ import sqlite3
 import os 
 
 def conectar_db():
-    """Establece conexión con SQLite y crea la tabla si no existe."""
+    """
+    Establece la conexión con la base de datos SQLite y asegura la existencia de la tabla.
+    
+    Crea el directorio 'data' si no existe, inicializa la tabla 'palabras' y 
+    realiza una población inicial de datos si la tabla está vacía.
+    
+    Returns:
+        sqlite3.Connection: Objeto de conexión a la base de datos.
+    """
     if not os.path.exists('data'):
         os.makedirs('data')
     
     conexion = sqlite3.connect('data/palabras.db')
     cursor = conexion.cursor()
     
-    # Crear tabla con campos: id, palabra, categoria, dificultad (Commit 2)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS palabras (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +26,6 @@ def conectar_db():
         )
     ''')
     
-    # Población inicial de la BD (Commit 2)
     palabras_iniciales = [
         ('PYTHON', 'PROGRAMACION', 'FACIL'), ('SQLITE', 'PROGRAMACION', 'INTERMEDIO'),
         ('ALGORITMO', 'PROGRAMACION', 'DIFICIL'), ('TECLADO', 'TECNOLOGIA', 'FACIL'),
@@ -33,13 +39,21 @@ def conectar_db():
         ('UNIVERSO', 'CIENCIA', 'FACIL'), ('ESTRELLA', 'CIENCIA', 'FACIL')
     ]
     
-    # Insert OR IGNORE para evitar duplicados (Commit 7)
     cursor.executemany('INSERT OR IGNORE INTO palabras (palabra, categoria, dificultad) VALUES (?, ?, ?)', palabras_iniciales)
     conexion.commit()
     return conexion
 
 def obtener_palabra_aleatoria(categoria=None):
-    """Obtiene una palabra de la BD, opcionalmente filtrada por categoría."""
+    """
+    Recupera una palabra aleatoria de la base de datos.
+    
+    Args:
+        categoria (str, optional): Categoría específica para filtrar la búsqueda. 
+                                   Si es None, elige de cualquier categoría.
+    
+    Returns:
+        str: La palabra seleccionada o None si no se encuentran resultados.
+    """
     conn = conectar_db()
     cursor = conn.cursor()
     
