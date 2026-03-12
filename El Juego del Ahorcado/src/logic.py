@@ -1,3 +1,25 @@
+import unicodedata
+
+def normalizar_texto(texto):
+    """
+    Elimina tildes, diéresis y otros modificadores, convirtiendo el texto a mayúsculas.
+    
+    Es fundamental para permitir que el jugador gane aunque no escriba tildes 
+    (ej. que 'Á' se valide con 'A'). Utiliza la normalización NFD para separar 
+    los caracteres de sus acentos.
+
+    Args:
+        texto (str): La cadena original (ej. "MÉXICO").
+
+    Returns:
+        str: La cadena normalizada y en mayúsculas (ej. "MEXICO").
+    """
+    texto = texto.upper()
+    # Transforma 'Á' en 'A', 'É' en 'E', etc.
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
 def validar_letra(entrada):
     """
     Verifica que la entrada del usuario sea un único carácter alfabético.

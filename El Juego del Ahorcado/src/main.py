@@ -1,11 +1,19 @@
-from database import conectar_db, obtener_palabra_aleatoria 
-from visual import obtener_dibujo, mostrar_progreso 
-from logic import validar_letra, comprobar_victoria 
-import sqlite3 
+try:
+    from src.database import conectar_db, obtener_palabra_aleatoria 
+    from src.visual import obtener_dibujo, mostrar_progreso 
+    from src.logic import validar_letra, comprobar_victoria, normalizar_texto # <--- Añade normalizar_texto
+except ModuleNotFoundError:
+    from database import conectar_db, obtener_palabra_aleatoria 
+    from visual import obtener_dibujo, mostrar_progreso 
+    from logic import validar_letra, comprobar_victoria, normalizar_texto # <--- Añade normalizar_texto
+    import sqlite3 
 
 def agregar_palabra():
     """
-    Solicita al usuario datos para insertar una nueva palabra en la base de datos.
+    Interfaz de consola para insertar manualmente una nueva palabra en la base de datos.
+    
+    Solicita al usuario la palabra, su categoría y su nivel de dificultad. 
+    Maneja excepciones en caso de que la palabra ya exista (vía restricción UNIQUE).
     """
     palabra = input("Introduce la palabra: ").upper()
     categoria = input("Introduce la categoría: ").upper()
@@ -25,11 +33,16 @@ def agregar_palabra():
 
 def jugar():
     """
-    Ejecuta el flujo principal de una partida del ahorcado.
+    Controlador principal de la partida activa.
     
-    Gestiona la selección de categoría, el control de intentos, la validación 
-    de letras y la determinación del estado final (victoria o derrota).
+    Realiza las siguientes tareas:
+    1. Permite al usuario elegir una categoría.
+    2. Gestiona el bucle de juego (máximo 6 errores).
+    3. Normaliza la entrada para evitar problemas con tildes.
+    4. Actualiza el estado visual (dibujo y progreso) en cada turno.
+    5. Determina y muestra el resultado final (Victoria/Derrota).
     """
+    # Lógica de selección de categoría
     conn = conectar_db()
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT categoria FROM palabras")
@@ -40,51 +53,62 @@ def jugar():
     print(f"Categorías disponibles: {', '.join(categorias)}")
     eleccion = input("Elige una categoría (o pulsa Enter para aleatoria): ").upper()
     
-    palabra_objetivo = obtener_palabra_aleatoria(eleccion if eleccion in categorias else None)
+    palabra_original = obtener_palabra_aleatoria(eleccion if eleccion in categorias else None)
     
-    if not palabra_objetivo:
+    if not palabra_original:
         print("No se encontraron palabras.")
         return
 
-    letras_adivinadas = []
-    letras_incorrectas = []
+    # REFACTOR: Normalización para casos borde (tildes/eñes)
+    palabra_objetivo = normalizar_texto(palabra_original) 
+    
+    # REFACTOR: Uso de sets para mayor velocidad y evitar duplicados
+    letras_adivinadas = set() 
+    letras_incorrectas = set()
     intentos_max = 6
-    errores = 0
 
-    while errores < intentos_max:
-        print(obtener_dibujo(errores))
-        print(mostrar_progreso(palabra_objetivo, letras_adivinadas))
+    while len(letras_incorrectas) < intentos_max:
+        print(obtener_dibujo(len(letras_incorrectas)))
+        # Muestra el progreso (usamos la original para que se vean las tildes visualmente)
+        print(mostrar_progreso(palabra_original, letras_adivinadas))
         print(f"Letras usadas: {', '.join(letras_incorrectas)}")
         
-        if comprobar_victoria(palabra_objetivo, letras_adivinadas):
-            print(f"\n¡VICTORIA! Has adivinado: {palabra_objetivo}")
-            break
-            
-        letra = validar_letra(input("Introduce una letra: "))
+        # Comprobar victoria antes de pedir letra
+        if comprobar_victoria(palabra_original, letras_adivinadas):
+            print(f"\n¡VICTORIA! La palabra era: {palabra_original}")
+            return 
+
+        entrada = input("Introduce una letra: ")
+        letra = validar_letra(entrada)
         
+        # Caso Borde: Entrada no válida
         if not letra:
-            print("Entrada no válida. Introduce solo una letra.")
+            print("❌ Entrada no válida. Introduce solo una letra (A-Z).")
             continue
             
+        # Caso Borde: Letra ya intentada
         if letra in letras_adivinadas or letra in letras_incorrectas:
-            print(f"Ya habías usado la letra '{letra}'.")
+            print(f"⚠️ Ya habías usado la letra '{letra}'.")
             continue
 
+        # Lógica de acierto/error
         if letra in palabra_objetivo:
-            print(f"¡Bien! La '{letra}' está en la palabra.")
-            letras_adivinadas.append(letra)
+            print(f"✅ ¡Bien! La '{letra}' está en la palabra.")
+            letras_adivinadas.add(letra)
         else:
-            print(f"Lo siento, la '{letra}' no está.")
-            letras_incorrectas.append(letra)
-            errores += 1
+            print(f"❌ Lo siento, la '{letra}' no está.")
+            letras_incorrectas.add(letra)
 
-    if errores == intentos_max:
-        print(obtener_dibujo(errores))
-        print(f"\n¡DERROTA! La palabra era: {palabra_objetivo}") 
-
+    # Caso Borde: Fin de intentos (Derrota)
+    if len(letras_incorrectas) == intentos_max:
+        print(obtener_dibujo(intentos_max))
+        print(f"\n💀 ¡DERROTA! La palabra era: {palabra_original}")
 def menu():
     """
-    Muestra el menú principal y gestiona la navegación entre las opciones del juego.
+    Punto de entrada visual de la aplicación.
+    
+    Gestiona el bucle infinito del menú principal, permitiendo al usuario navegar
+    entre jugar, añadir contenido, listar la base de datos o cerrar el programa.
     """
     while True:
         print("\n=== JUEGO DEL AHORCADO CON SQLITE ===")

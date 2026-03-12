@@ -43,6 +43,20 @@ def conectar_db():
     conexion.commit()
     return conexion
 
+def inicializar_db():
+    """
+    Crea la estructura de la base de datos y carga los datos por defecto.
+    
+    Esta función está diseñada para ejecutarse una sola vez al inicio del ciclo
+    de vida de la aplicación para garantizar que el esquema de la tabla y los 
+    registros base estén presentes.
+    """
+    with conectar_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS palabras (...)''')
+        # ... (resto de tu lógica de población inicial)
+        conn.commit()
+
 def obtener_palabra_aleatoria(categoria=None):
     """
     Recupera una palabra aleatoria de la base de datos.
