@@ -74,18 +74,3 @@ def obtener_dibujo(intentos_fallidos):
         """
     ]
     return estados[intentos_fallidos]
-
-def mostrar_progreso(palabra, letras_adivinadas):
-    """
-    Genera la cadena de visualización de la palabra (letras descubiertas y guiones).
-    
-    Args:
-        palabra (str): La palabra original (puede contener tildes).
-        letras_adivinadas (iterable): Letras que el usuario ya ha acertado.
-        
-    Returns:
-        str: Una cadena formateada con espacios para facilitar la lectura. 
-             Ejemplo: "P Y _ H _ N"
-    """
-    progreso = [letra if letra in letras_adivinadas else "_" for letra in palabra]
-    return f"Palabra: {' '.join(progreso)}"
