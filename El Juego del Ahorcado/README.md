@@ -5,28 +5,41 @@ Un juego del ahorcado desarrollado en Python con arquitectura modular, base de d
 # 📁 Estructura del Proyecto
 
 ```
-El Juego del Ahorcado/
-├── data/                      # Datos del juego (palabras, categorías, etc.)
-├── docs/
-│   └── asistecia_ia.md        # Documentación sobre la asistencia por IA
-├── src/
-│   ├── __init__.py
-│   ├── database.py            # Gestión de la base de datos de palabras
-│   ├── logic.py               # Lógica principal del juego
-│   ├── main.py                # Punto de entrada de la aplicación
-│   └── visual.py              # Interfaz visual / renderizado
-├── test/
-│   └── src/
-│       ├── __init__.py
-│       ├── test_database.py   # Tests para el módulo de base de datos
-│       ├── test_logic.py      # Tests para la lógica del juego
-│       ├── test_main.py       # Tests del flujo principal
-│       └── test_visual.py     # Tests de la interfaz visual
-├── __init__.py
-├── .gitignore
-├── LICENSE
-├── README.md
-└── requirements.txt
+├── data/
+│   └── palabras.db               # Base de datos con las palabras del juego
+│
+└── El Juego del Ahorcado/
+    ├── database/
+    │   ├── __init__.py
+    │   └── db_handler.py             # Gestión y acceso a la base de datos
+    ├── docs/
+    │   └── asistecia_ia.md           # Documentación de asistencia con IA
+    ├── logic/
+    │   ├── __init__.py
+    │   ├── game_engine.py            # Motor principal del juego
+    │   └── validators.py             # Validaciones de entrada y lógica
+    ├── tests/
+    │   ├── database/
+    │   │   ├── __init__.py
+    │   │   └── test-db_handler.py    # Tests del manejador de base de datos
+    │   ├── logic/
+    │   │   ├── __init__.py
+    │   │   ├── tests-game_engine.py  # Tests del motor de juego
+    │   │   └── tests-validators.py   # Tests de validaciones
+    │   ├── ui/
+    │   │   ├── __init__.py
+    │   │   └── tests_visuals.py      # Tests de la interfaz visual
+    │   ├── __init__.py
+    │   └── test_main.py              # Tests del punto de entrada principal
+    ├── ui/
+    │   ├── __init__.py               # Módulo de interfaz de usuario
+    │   └── visuals.py                # Componentes visuales de la interfaz
+    ├── __init__.py
+    ├── .gitignore
+    ├── LICENSE
+    ├── main.py                       # Punto de entrada principal
+    ├── README.md
+    └── requirements.txt
 ```
 
 # 🚀 Instalación
