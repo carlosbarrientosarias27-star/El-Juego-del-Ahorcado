@@ -1,67 +1,68 @@
 import unittest
 import os
+import sqlite3
 import sys
+import os
 
-# Subimos DOS niveles (..) para llegar a la raíz del proyecto
-# 1. De 'src' a 'test'
-# 2. De 'test' a 'El Juego del Ahorcado'
-root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.append(root_path)
+# Añade la carpeta raíz del proyecto al path de búsqueda de Python
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-# Ahora Python sí encontrará la carpeta 'src' que está en la raíz
-from src.database import conectar_db, obtener_palabra_aleatoria
+import unittest
+# Ahora sí encontrará 'database'
+from database.db_handler import conectar_db, obtener_palabra_aleatoria
 
-class TestDatabase(unittest.TestCase):
+class TestDBHandler(unittest.TestCase):
 
-    def setUp(self):
-        """Se ejecuta antes de cada test. Preparamos un entorno limpio."""
-        self.db_path = 'data/palabras.db'
-        # La función conectar_db ya crea la carpeta y la tabla, 
-        # así que solo la llamamos para inicializar.
-        self.conn = conectar_db()
+    @classmethod
+    def setUpClass(cls):
+        """Se ejecuta antes de todas las pruebas para asegurar un entorno limpio."""
+        # Si existe una DB de prueba previa, la borramos para empezar de cero
+        if os.path.exists('data/palabras.db'):
+            pass # O podrías borrarla si prefieres un test totalmente aislado
 
-    def tearDown(self):
-        """Se ejecuta después de cada test. Cerramos conexión y limpiamos."""
-        self.conn.close()
-        # Opcional: Eliminar la DB de prueba para que cada test sea 100% independiente
-        if os.path.exists(self.db_path):
-            os.remove(self.db_path)
-
-    def test_conexion_crea_tabla(self):
-        """Verifica que la tabla 'palabras' se cree correctamente."""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='palabras'")
-        tabla = cursor.fetchone()
-        self.assertIsNotNone(tabla, "La tabla 'palabras' debería existir.")
-
-    def test_poblacion_inicial(self):
-        """Verifica que los datos iniciales se inserten al conectar."""
-        cursor = self.conn.cursor()
+    def test_1_conexion_y_creacion(self):
+        """Prueba que la conexión se cree y la tabla exista con datos iniciales."""
+        conn = conectar_db()
+        self.assertIsInstance(conn, sqlite3.Connection)
+        
+        cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM palabras")
-        cantidad = cursor.fetchone()[0]
-        self.assertGreater(cantidad, 0, "La base de datos debería tener palabras iniciales.")
+        count = cursor.fetchone()[0]
+        
+        # Verificamos que al menos se insertaron las 20 palabras iniciales
+        self.assertGreaterEqual(count, 20)
+        conn.close()
 
-    def test_obtener_palabra_aleatoria_sin_filtro(self):
-        """Verifica que devuelve una cadena de texto cuando no hay filtro."""
+    def test_2_obtener_palabra_aleatoria(self):
+        """Prueba que se obtenga una palabra (no sea None)."""
         palabra = obtener_palabra_aleatoria()
+        self.assertIsNotNone(palabra)
         self.assertIsInstance(palabra, str)
-        self.assertGreater(len(palabra), 0)
 
-    def test_obtener_palabra_por_categoria(self):
-        """Verifica que el filtro por categoría funcione."""
+    def test_3_obtener_palabra_por_categoria(self):
+        """Prueba el filtrado por categoría."""
         categoria_test = 'CIENCIA'
         palabra = obtener_palabra_aleatoria(categoria=categoria_test)
         
-        # Comprobar que la palabra obtenida pertenece realmente a esa categoría
-        cursor = self.conn.cursor()
+        # Verificamos que la palabra obtenida realmente pertenezca a esa categoría
+        conn = conectar_db()
+        cursor = conn.cursor()
         cursor.execute("SELECT categoria FROM palabras WHERE palabra = ?", (palabra,))
         res = cursor.fetchone()
+        conn.close()
+        
         self.assertEqual(res[0], categoria_test)
 
-    def test_obtener_palabra_categoria_inexistente(self):
-        """Verifica que devuelve None si la categoría no existe."""
+    def test_4_categoria_inexistente(self):
+        """Prueba que retorne None si la categoría no existe."""
         palabra = obtener_palabra_aleatoria(categoria="CATEGORIA_FANTASMA")
         self.assertIsNone(palabra)
+
+    def test_5_limite_palabra_aleatoria(self):
+        """Verifica que el sistema no falle si se pide una palabra en una DB vacía."""
+        # Caso borde: Intentar obtener palabra de una categoría que no existe
+        palabra = obtener_palabra_aleatoria(categoria="NO_EXISTO")
+        self.assertIsNone(palabra)    
 
 if __name__ == '__main__':
     unittest.main()

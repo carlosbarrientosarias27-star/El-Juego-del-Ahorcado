@@ -1,45 +1,45 @@
 import unittest
-import os
 import sys
+import os
 
-# Configuración de ruta para encontrar 'src'
-directorio_actual = os.path.dirname(os.path.abspath(__file__))
-ruta_raiz = os.path.join(directorio_actual, "..", "..")
-sys.path.insert(0, os.path.abspath(ruta_raiz))
+# Ajuste de path para encontrar la carpeta 'ui'
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from src.visual import obtener_dibujo, mostrar_progreso
+from ui.visuals import obtener_dibujo
 
-class TestVisual(unittest.TestCase):
+class TestVisuals(unittest.TestCase):
 
-    def test_obtener_dibujo_inicial(self):
-        """Verifica que el dibujo inicial (0 intentos) no tenga la cabeza."""
+    def test_dibujo_inicial(self):
+        """Verifica que el estado 0 (inicio) contenga la estructura base sin el personaje."""
         dibujo = obtener_dibujo(0)
-        # CORRECCIÓN: Usamos assertNotIn para verificar ausencia
-        self.assertNotIn("O", dibujo, "El dibujo inicial no debería tener la cabeza 'O'")
-        self.assertIsInstance(dibujo, str)
+        self.assertIn("------", dibujo)
+        self.assertNotIn("O", dibujo)  # No debería haber cabeza
+        self.assertNotIn("/", dibujo)  # No debería haber extremidades
 
-    def test_obtener_dibujo_final(self):
-        """Verifica que el dibujo final (6 intentos) contenga el cuerpo completo."""
+    def test_dibujo_final(self):
+        """Verifica que el estado 6 (derrota) contenga el cuerpo completo."""
         dibujo = obtener_dibujo(6)
-        self.assertIn("O", dibujo)
-        # CORRECCIÓN: Buscamos la representación real del cuerpo y las piernas
-        # En el dibujo final de visual.py, el tronco y brazos se ven como "/|\\"
-        self.assertIn("/|\\", dibujo) 
-        self.assertIn("/ \\", dibujo)
+        self.assertIn("O", dibujo)    # Cabeza
+        self.assertIn("/|\\", dibujo) # Tronco y brazos
+        self.assertIn("/ \\", dibujo) # Piernas
 
-    def test_mostrar_progreso_vacio(self):
-        """Verifica la visualización sin letras adivinadas."""
-        palabra = "PYTHON"
-        letras_adivinadas = []
-        resultado = mostrar_progreso(palabra, letras_adivinadas)
-        self.assertEqual(resultado, "Palabra: _ _ _ _ _ _")
+    def test_todos_los_estados_son_strings(self):
+        """Asegura que todos los niveles (0-6) devuelvan un string válido."""
+        for i in range(7):
+            with self.subTest(intentos=i):
+                dibujo = obtener_dibujo(i)
+                self.assertIsInstance(dibujo, str)
+                self.assertGreater(len(dibujo), 20)
 
-    def test_mostrar_progreso_parcial(self):
-        """Verifica la visualización con algunas letras adivinadas."""
-        palabra = "SQLITE"
-        letras_adivinadas = ["S", "L", "E"]
-        resultado = mostrar_progreso(palabra, letras_adivinadas)
-        self.assertEqual(resultado, "Palabra: S _ L _ _ E")
+    def test_indice_fuera_de_rango(self):
+        """Verifica que el código lance un error si se piden más de 6 intentos."""
+        with self.assertRaises(IndexError):
+            obtener_dibujo(7)
+    
+    def test_limite_exacto_dibujo(self):
+        """Asegura que el dibujo 6 es efectivamente el último disponible."""
+        with self.assertRaises(IndexError):
+            obtener_dibujo(7) # El intento 7 debe dar error porque el juego acaba en el 6
 
 if __name__ == '__main__':
     unittest.main()

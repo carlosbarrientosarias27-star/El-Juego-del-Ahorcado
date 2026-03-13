@@ -2,6 +2,7 @@ from database.db_handler import conectar_db, obtener_palabra_aleatoria
 from ui.visuals import obtener_dibujo
 from logic.validators import validar_letra
 import sqlite3
+import unicodedata 
 
 def jugar():
     """
@@ -25,6 +26,13 @@ def jugar():
     eleccion = input("Elige una categoría (o pulsa Enter para aleatoria): ").upper()
     
     palabra_objetivo = obtener_palabra_aleatoria(eleccion if eleccion in categorias else None)
+
+    if palabra_objetivo:
+    # Normalizamos la palabra secreta para que no tenga tildes
+        palabra_objetivo = "".join(
+        c for c in unicodedata.normalize('NFD', palabra_objetivo)
+        if unicodedata.category(c) != 'Mn'
+    ).upper()
     
     if not palabra_objetivo:
         print("No se encontraron palabras.")
