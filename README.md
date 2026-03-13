@@ -17,6 +17,8 @@ Juego clásico del Ahorcado desarrollado en Python, con arquitectura modular que
 │   │   ├── game_engine.py         # Motor principal del juego
 │   │   └── validators.py          # Validaciones de entrada y lógica
 │   ├── tests/
+│   │   ├── __init__.py
+│   │   ├── test_main.py           # Tests del punto de entrada principal
 │   │   ├── database/
 │   │   │   ├── __init__.py
 │   │   │   └── test-db_handler.py
@@ -26,10 +28,11 @@ Juego clásico del Ahorcado desarrollado en Python, con arquitectura modular que
 │   │   │   └── tests-validators.py
 │   │   └── ui/
 │   │       ├── __init__.py
-│   │       ├── tests_visuals.py
-│   │       └── test_main.py
+│   │       └── tests_visuals.py
 │   ├── ui/
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── visuals.py             # Componentes visuales de la interfaz
+│   ├── __init__.py
 │   ├── .gitignore
 │   ├── LICENSE
 │   ├── main.py
