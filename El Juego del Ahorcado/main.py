@@ -3,6 +3,14 @@ from database.db_handler import conectar_db
 import sqlite3
 
 def agregar_palabra():
+    """
+    Solicita al usuario una palabra nueva y la inserta en la base de datos.
+ 
+    Pide interactivamente la palabra, su categoría y su dificultad.
+    Valida que la palabra contenga solo letras antes de intentar
+    la inserción. Informa al usuario si la operación fue exitosa o si
+    ocurrió algún error (por ejemplo, palabra duplicada).
+    """
     nueva = input("Introduce la palabra: ").upper()
     if not nueva.isalpha():
         print("Error: Solo letras.")
